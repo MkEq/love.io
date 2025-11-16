@@ -1,20 +1,21 @@
-// Обработчик для кнопки "Sure"
-document.getElementById("sure-button").addEventListener("click", function () {
-    // Скрываем текущий контейнер
-    document.querySelector(".content").style.display = "none";
+document.addEventListener("DOMContentLoaded", () => {
+  // ====================== ЭЛЕМЕНТЫ ======================
+  const content = document.querySelector(".content");
+  const timeContainer = document.getElementById("time-container");
+  const finalContainer = document.getElementById("final-container");
+  const waitBox = document.getElementById("wait-box");
 
-    // Показываем новый контейнер с временем
-    document.getElementById("time-container").style.display = "flex";
+  const sureBtn = document.getElementById("sure-button");
+  const maybeBtn = document.getElementById("maybe-later");
+  const foreverBtn = document.getElementById("forever-button");
+  const replayBtn = document.getElementById("replay-button");
 
-    // Запускаем отсчёт времени
-    startTimeCounter();
+  const heartsContainer = document.getElementById("hearts-container");
 
-    // Через 3 секунды запускаем показ сообщений
-    setTimeout(showMessages, 1000);
-});
+  // ====================== ПЕРЕМЕННЫЕ ======================
+  let timerInterval = null;
 
-// Список сообщений
-const messages = [
+  const messages = [
     "Remember when we first met?",
     "So many memories!",
     "You are my person!",
@@ -26,127 +27,144 @@ const messages = [
     "You make my heart smile!",
     "My favourite story is ours!",
     "You are the best thing ever!",
-    "Cherishing every moment!"
-];
+    "Cherishing every moment!",
+  ];
 
-// Функция для показа сообщений
-function showMessages() {
-    messages.forEach((message, index) => {
-        setTimeout(() => {
-            createMessage(message);
-        }, index * 1300); // Каждое сообщение появляется через 1.5 секунды после предыдущего
-    });
+  // правильная дата: 22 ноября 2024
+  const startDate = new Date(2024, 10, 22);
 
-    // После завершения показа всех сообщений показываем кнопку
-    setTimeout(() => {
-        document.getElementById("forever-button").style.display = "block";
-    }, messages.length * 1500); // Общее время показа всех сообщений + 3 секунды
-}
+  // ====================== ТОЧНЫЙ РАСЧЁТ ДАТЫ ======================
+  function getDateDiff(start, end) {
+    let years = end.getFullYear() - start.getFullYear();
+    let months = end.getMonth() - start.getMonth();
+    let days = end.getDate() - start.getDate();
 
-// Функция для создания сообщения
-function createMessage(text) {
-    const messageBox = document.createElement('div');
-    messageBox.classList.add('message-box');
-    messageBox.textContent = text;
-
-    // Позиционируем сообщение в случайном месте
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    const xPos = Math.random() * (screenWidth - 200); // Учитываем ширину сообщения
-    const yPos = Math.random() * (screenHeight - 100); // Учитываем высоту сообщения
-
-    messageBox.style.left = `${xPos}px`;
-    messageBox.style.top = `${yPos}px`;
-
-    document.body.appendChild(messageBox);
-
-    // Удаляем сообщение после завершения анимации
-    setTimeout(() => {
-        messageBox.remove();
-    }, 2800); // Сообщение исчезает через 3 секунды
-}
-
-// Функция для отсчёта времени
-function startTimeCounter() {
-    const startDate = new Date("2024-11-22T00:00:00"); // Начальная дата
-
-    function updateTime() {
-        const now = new Date();
-        const diff = now - startDate;
-
-        const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
-        const months = Math.floor((diff % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30));
-        const days = Math.floor((diff % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-        document.getElementById("years").textContent = years;
-        document.getElementById("months").textContent = months;
-        document.getElementById("days").textContent = days;
-        document.getElementById("hours").textContent = hours;
-        document.getElementById("minutes").textContent = minutes;
-        document.getElementById("seconds").textContent = seconds;
+    // Если дни ушли в минус → берём дни из предыдущего месяца
+    if (days < 0) {
+      months--;
+      let prevMonthDays = new Date(
+        end.getFullYear(),
+        end.getMonth(),
+        0
+      ).getDate();
+      days += prevMonthDays;
     }
 
-    // Обновляем время каждую секунду
-    setInterval(updateTime, 1000);
-    updateTime(); // Первый вызов
-}
+    // Если месяцы ушли в минус → забираем один год
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
 
-// Обработчик для кнопки "Maybe later"
-document.getElementById("maybe-later").addEventListener("click", function () {
-    // Скрываем основной контейнер
-    document.querySelector(".content").style.display = "none";
+    return { years, months, days };
+  }
 
-    // Показываем бокс "I'll Wait!"
-    const waitBox = document.getElementById("wait-box");
+  // ====================== ОБНОВЛЕНИЕ ВРЕМЕНИ ======================
+  function updateTime() {
+    const now = new Date();
+
+    // точные года / месяцы / дни
+    const { years, months, days } = getDateDiff(startDate, now);
+
+    // часы / минуты / секунды считаем по разнице миллисекунд
+    const diff = now - startDate;
+
+    const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+    const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
+    const seconds = Math.floor((diff % (60 * 1000)) / 1000);
+
+    document.getElementById("years").textContent = years;
+    document.getElementById("months").textContent = months;
+    document.getElementById("days").textContent = days;
+    document.getElementById("hours").textContent = hours;
+    document.getElementById("minutes").textContent = minutes;
+    document.getElementById("seconds").textContent = seconds;
+  }
+
+  function startTimeCounter() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(updateTime, 1000);
+    updateTime();
+  }
+
+  // ====================== СООБЩЕНИЯ ======================
+  function createMessage(text) {
+    const msg = document.createElement("div");
+    msg.classList.add("message-box");
+    msg.textContent = text;
+
+    const sw = window.innerWidth;
+    const sh = window.innerHeight;
+
+    msg.style.left = `${Math.random() * (sw - 200)}px`;
+    msg.style.top = `${Math.random() * (sh - 120)}px`;
+
+    document.body.appendChild(msg);
+
+    setTimeout(() => msg.remove(), 3000);
+  }
+
+  function showMessages() {
+    const interval = 1500;
+
+    messages.forEach((message, i) => {
+      setTimeout(() => createMessage(message), i * interval);
+    });
+
+    // Показ кнопки после последнего сообщения
+    setTimeout(() => {
+      foreverBtn.style.display = "block";
+    }, messages.length * interval + 500);
+  }
+
+  // ====================== КНОПКИ ======================
+
+  // --- Sure ---
+  sureBtn.addEventListener("click", () => {
+    content.style.display = "none";
+    timeContainer.style.display = "flex";
+
+    startTimeCounter();
+    setTimeout(showMessages, 1000);
+  });
+
+  // --- Maybe Later ---
+  maybeBtn.addEventListener("click", () => {
+    content.style.display = "none";
     waitBox.style.display = "block";
 
-    // Через 3 секунды скрываем бокс и перенаправляем на другую страницу
-    setTimeout(function () {
-        waitBox.style.display = "none";
-        window.location.href = "../index.html"; // Укажите нужный URL
-    }, 3000); // 3000 мс = 3 секунды
-});
-
-// Обработчик для кнопки "Click for forever"
-document.getElementById("forever-button").addEventListener("click", function () {
-    // Скрываем текущий контейнер и кнопку "Click for forever"
-    document.getElementById("time-container").style.display = "none";
-    document.getElementById("forever-button").style.display = "none";
-
-    // Показываем финальный контейнер
-    document.getElementById("final-container").style.display = "flex";
-});
-
-// Обработчик для кнопки "Replay"
-document.getElementById("replay-button").addEventListener("click", function () {
-    // Скрываем финальный контейнер
-    document.getElementById("final-container").style.display = "none";
-
-    // Показываем начальный контейнер
-    document.querySelector(".content").style.display = "flex";
-});
-
-// ==========================hearts-background=====================================
-function createHeart() {
-    const heart = document.createElement('div');
-    heart.innerHTML = '❤️';
-    heart.classList.add('heart');
-
-    const screenWidth = window.innerWidth;
-    const xPos = Math.random() * screenWidth;
-    heart.style.left = `${xPos}px`;
-
-    const delay = Math.random() * 1.5;
-    heart.style.animationDelay = `${delay}s`;
-
-    document.getElementById('hearts-container').appendChild(heart);
-
     setTimeout(() => {
-        heart.remove();
-    }, 5000);
-}
+      waitBox.style.display = "none";
+      window.location.href = "../index.html";
+    }, 3000);
+  });
 
-setInterval(createHeart, 250);
+  // --- Click for Forever ---
+  foreverBtn.addEventListener("click", () => {
+    timeContainer.style.display = "none";
+    foreverBtn.style.display = "none";
+    finalContainer.style.display = "flex";
+  });
+
+  // --- Replay ---
+  replayBtn.addEventListener("click", () => {
+    finalContainer.style.display = "none";
+    content.style.display = "flex";
+  });
+
+  // ====================== СЕРДЕЧКИ ======================
+  function createHeart() {
+    const heart = document.createElement("div");
+    heart.classList.add("heart");
+    heart.innerHTML = "❤️";
+
+    heart.style.left = `${Math.random() * window.innerWidth}px`;
+    heart.style.animationDelay = `${Math.random() * 2}s`;
+
+    heartsContainer.appendChild(heart);
+
+    setTimeout(() => heart.remove(), 6000);
+  }
+
+  setInterval(createHeart, 350);
+});

@@ -181,3 +181,13 @@ button:active {
     justify-content: center;
     margin-top: 20px;
 }
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 10;
+  box-shadow: 0 0 6px currentColor; /* свечения для яркости */
+}
